@@ -26,3 +26,12 @@ You can check out the [create-t3-app GitHub repository](https://github.com/t3-os
 ## How do I deploy this?
 
 Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+
+
+## 常用命令
+
+```shell
+npx prisma studio # 打开prisma提供的数据库操作界面
+
+npx prisma db push # 同步模型至数据库
+```
