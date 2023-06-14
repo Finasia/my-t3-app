@@ -33,5 +33,7 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 ```shell
 npx prisma studio # 打开prisma提供的数据库操作界面
 
-npx prisma db push # 同步模型至数据库
+# 模型有改动时需要执行以下命令
+npx prisma db push  # 将模型同步到数据库
+npx prisma generate # 生成prisma client（prisma能点出来你新添加的模型, 比如prisma.新模型.findMany）
 ```

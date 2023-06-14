@@ -11,8 +11,21 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Example {
-  id        String   @id @default(cuid())
+// model Example {
+//   id        String   @id @default(cuid())
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+model Post {
+  id        String   @id @default(cuid()) // cuid 是连续的unique id
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  content  String @db.VarChar(255)
+  authorId String
+
+  // 创建一个索引, 方便我们用 authorId 来查找指定作者的所有post
+  // (创建索引后,查找时就不会搜索整个表了)
+  @@index([authorId])
 }
