@@ -20,8 +20,7 @@ export const config = {
 
 
 //This is our previous version of middleware and will soon be deprecated.
-//https://clerk.com/docs/nextjs/middleware#previous-versions
-/*
+/*//https://clerk.com/docs/nextjs/middleware#previous-versions
 import { withClerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -30,5 +29,4 @@ export default withClerkMiddleware((req) => {
 });
 
 // Stop Middleware running on static files
-export const config = { matcher:  '/((?!_next/image|_next/static|favicon.ico).*)',};
-*/
+export const config = { matcher:  '/((?!_next/image|_next/static|favicon.ico).*)',};*/
