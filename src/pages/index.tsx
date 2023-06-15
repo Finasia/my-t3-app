@@ -7,19 +7,25 @@ import Image from "next/image";
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import {LoadingSpanner} from "~/components/loading";
 dayjs.extend(relativeTime);
 
 const Home: NextPage = () => {
   // const hello = api.example.hello.useQuery({ text: "from tRPC" });
   // console.log(hello.data?.greeting);
 
-  const user = useUser();
-  console.log('Home user:',user);
-  // 这里的useQuery封装了react-query
-  const { data,isLoading} = api.posts.getAll.useQuery();
-  console.log('Home data:',data);
-  if(isLoading) return <div>Loading ...</div>
-  if(!data) return <div>Something went wrong, data fetch failed</div>
+  const {isLoaded: userLoaded,isSignedIn} = useUser();
+
+  // Start fetching asap(as soon as possible)
+  api.posts.getAll.useQuery()
+
+  // 关于isLoaded:
+  // Until Clerk loads and initializes, `isLoaded` will be set to `false`.
+  // Once Clerk loads, `isLoaded` will be set to `true`, and you can
+  // safely access `isSignedIn` state and `user`.
+  // 当Clerk加载和初始化完成后就会设置为true, ***不管你是否登录***
+  // 此时你可以安全地访问isSignedIn状态和user
+  if(!userLoaded) return <div/>
 
   return (
     <>
@@ -31,20 +37,14 @@ const Home: NextPage = () => {
       <main className="flex h-screen justify-center">
         <div className="w-full h-full border-x border-slate-400 md:max-w-2xl">
           <div className="border-b border-slate-400 p-4">
-            {!user.isSignedIn && (
+            {!isSignedIn && (
               <div className="flex justify-center">
                 <SignInButton/>
               </div>
             )}
-            {!!user.isSignedIn && <CreatePostWizard/>}
+            {!!isSignedIn && <CreatePostWizard/>}
           </div>
-          <div className="flex flex-col">
-            {
-              data?.map((postWithAuthor) => (
-                <PostView key={postWithAuthor.post.id} {...postWithAuthor} />
-              ))
-            }
-          </div>
+          <Feed/>
         </div>
       </main>
     </>
@@ -90,8 +90,34 @@ const PostView = (props:PostWithUser) => {
          <span>{`@${author.username}`}</span>
          <span className="font-thin">{` · ${dayjs(post.createdAt).fromNow()}`}</span>
        </div>
-       <span>{post.content}</span>
+       <span className="text-2xl">{post.content}</span>
      </div>
    </div>
  )
 };
+
+export const LoadingPage = () => {
+  return <div className="absolute top-0 right-0 flex h-screen w-screen justify-center items-center">
+    <LoadingSpanner size={60}/>
+  </div>
+}
+
+const Feed = () => {
+  // 这里的useQuery封装了react-query
+  const { data,isLoading: postsLoading} = api.posts.getAll.useQuery();
+  console.log('Home Feed data:',data);
+
+  if(postsLoading) return <LoadingPage/>
+
+  if(!data) return <div>Something went wrong</div>
+
+  return (
+    <div className="flex flex-col">
+      {
+        data?.map((postWithAuthor) => (
+          <PostView key={postWithAuthor.post.id} {...postWithAuthor} />
+        ))
+      }
+    </div>
+  )
+}
