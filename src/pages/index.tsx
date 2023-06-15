@@ -3,15 +3,19 @@ import Head from "next/head";
 import {api} from "~/utils/api";
 import type {RouterOutputs} from "~/utils/api";
 import {SignInButton, SignOutButton, useUser} from "@clerk/nextjs";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
 const Home: NextPage = () => {
   // const hello = api.example.hello.useQuery({ text: "from tRPC" });
   // console.log(hello.data?.greeting);
 
   const user = useUser();
-  console.log('user:',user);
+  console.log('Home user:',user);
   // 这里的useQuery封装了react-query
   const { data,isLoading} = api.posts.getAll.useQuery();
+  console.log('Home data:',data);
   if(isLoading) return <div>Loading ...</div>
   if(!data) return <div>Something went wrong, data fetch failed</div>
 
@@ -71,7 +75,7 @@ const PostView = (props:PostWithUser) => {
      <div className="flex flex-col">
        <div className="flex text-slate-300 gap-1">
          <span>{`@${author.username}`}</span>
-         <span className="font-thin">{` · 1 hour ago`}</span>
+         <span className="font-thin">{` · ${dayjs(post.createdAt).fromNow()}`}</span>
        </div>
        <span>{post.content}</span>
      </div>
