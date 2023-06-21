@@ -1,5 +1,5 @@
 //https://flowbite.com/docs/components/spinner/#default-spinner
-export const LoadingSpanner = (props: {size?: number})=>{
+export const LoadingSpinner = (props: {size?: number})=>{
   return (
     <div role="status">
       <svg aria-hidden="true"
@@ -18,4 +18,10 @@ export const LoadingSpanner = (props: {size?: number})=>{
       <span className="sr-only">Loading...</span>
     </div>
   )
+}
+
+export const LoadingPage = () => {
+  return <div className="absolute top-0 right-0 flex h-screen w-screen justify-center items-center">
+    <LoadingSpinner size={60}/>
+  </div>
 }

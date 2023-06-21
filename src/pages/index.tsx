@@ -7,9 +7,10 @@ import Image from "next/image";
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {LoadingSpanner} from "~/components/loading";
+import {LoadingPage, LoadingSpinner} from "~/components/loading";
 import {useState} from "react";
 import toast from "react-hot-toast";
+
 dayjs.extend(relativeTime);
 
 const Home: NextPage = () => {
@@ -71,7 +72,11 @@ const CreatePostWizard = () => {
       const errorMessages = err.data?.zodError?.fieldErrors.content;
       if (errorMessages && errorMessages[0]) {
         toast.error(errorMessages[0]);
-      } else {
+      }
+      else if(err.data?.code === "TOO_MANY_REQUESTS"){
+        toast.error("The operation is too frequent! Please try again later.");
+      }
+      else {
         console.log(err);
         toast.error("Failed to post! Please try again later.");
       }
@@ -91,8 +96,24 @@ const CreatePostWizard = () => {
       placeholder="Type some emojis!"
       className="bg-transparent grow outline-none"
       value={input} onChange={(e)=>setInput(e.target.value)}
+      disabled={isPosting}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (input !== "") {
+            mutate({ content: input });
+          }
+        }
+      }}
     />
-    <button onClick={()=>mutate({content: input})}>Post</button>
+    {input !== "" && !isPosting && (
+      <button onClick={() => mutate({ content: input })}>Post</button>
+    )}
+    {isPosting && (
+      <div className="flex items-center justify-center">
+        <LoadingSpinner size={20} />
+      </div>
+    )}
   </div>
 };
 
@@ -120,12 +141,6 @@ const PostView = (props:PostWithUser) => {
    </div>
  )
 };
-
-export const LoadingPage = () => {
-  return <div className="absolute top-0 right-0 flex h-screen w-screen justify-center items-center">
-    <LoadingSpanner size={60}/>
-  </div>
-}
 
 const Feed = () => {
   // 这里的useQuery封装了react-query
