@@ -8,6 +8,8 @@ import Image from "next/image";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {LoadingSpanner} from "~/components/loading";
+import {useState} from "react";
+import toast from "react-hot-toast";
 dayjs.extend(relativeTime);
 
 const Home: NextPage = () => {
@@ -55,8 +57,26 @@ export default Home;
 
 const CreatePostWizard = () => {
   const {user} = useUser();
-
   console.log('user:', user);
+
+  const [input, setInput] = useState("");
+
+  const ctx = api.useContext();
+  const {mutate, isLoading: isPosting} = api.posts.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+      void ctx.posts.getAll.invalidate() //使用void忽略返回值，防止eslint报错
+    },
+    onError: (err) => {
+      const errorMessages = err.data?.zodError?.fieldErrors.content;
+      if (errorMessages && errorMessages[0]) {
+        toast.error(errorMessages[0]);
+      } else {
+        console.log(err);
+        toast.error("Failed to post! Please try again later.");
+      }
+    }
+  });
 
   if(!user) return null;
 
@@ -67,7 +87,12 @@ const CreatePostWizard = () => {
       width={56} height={56}
       className="w-14 h-14 rounded-full"
     />
-    <input placeholder="Type some emojis!" className="bg-transparent grow outline-none"/>
+    <input
+      placeholder="Type some emojis!"
+      className="bg-transparent grow outline-none"
+      value={input} onChange={(e)=>setInput(e.target.value)}
+    />
+    <button onClick={()=>mutate({content: input})}>Post</button>
   </div>
 };
 
