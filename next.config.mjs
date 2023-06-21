@@ -21,6 +21,17 @@ const config = {
 
   images: {
     domains: ["images.clerk.dev"],
-  }
+  },
+
+  // 因为我们这个项目是用github-ci跑lint和typescript类型检查
+  // 用Vercel跑构建和部署
+  // 故在Vercel上跑构建时，我们不需要再跑lint和typescript类型检查
+  typescript: {
+    ignoreBuildErrors: true
+  },
+  eslint: {
+    ignoreDuringBuilds: true
+  },
+  swcMinify: true
 };
 export default config;
