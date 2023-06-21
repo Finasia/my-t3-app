@@ -5,6 +5,7 @@ import {createServerSideHelpers } from "@trpc/react-query/server";
 import {appRouter} from "~/server/api/root";
 import superjson from "superjson";
 import {prisma} from "~/server/db";
+import {PageLayout} from "~/components/layout";
 
 const ProfilePage: NextPage<{ username: string }> = ({ username }) => {
   const { data,isLoading } = api.profile.getUserByUsername.useQuery({
@@ -17,9 +18,9 @@ const ProfilePage: NextPage<{ username: string }> = ({ username }) => {
       <Head>
         <title>{data.username}</title>
       </Head>
-      <main className="flex h-screen justify-center">
+      <PageLayout>
         <div>{data.username}</div>
-      </main>
+      </PageLayout>
     </>
   );
 };
