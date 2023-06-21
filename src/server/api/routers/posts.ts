@@ -5,6 +5,7 @@ import {TRPCError} from "@trpc/server";
 import {Ratelimit} from "@upstash/ratelimit";
 import {Redis} from "@upstash/redis";
 import {filterUserForClient} from "~/server/helpers/filterUserForClient";
+import {Post} from "@prisma/client";
 
 export const postsRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
@@ -12,24 +13,28 @@ export const postsRouter = createTRPCRouter({
       take: 100,
       orderBy: [{createdAt: "desc"}],
     });
-    const users = (await clerkClient.users.getUserList({
-      userId: posts.map((post) => post.authorId),
-      limit: 100
-    })).map(filterUserForClient);
-    console.log('postsRouter getAll users:',users);
 
-    return posts.map((post) => {
-      const author = users.find((user) => user.id === post.authorId);
-      if (!author || !author.username) throw new TRPCError({code: "INTERNAL_SERVER_ERROR", message: "Author for post not found" });
-      return {
-        post,
-        author: {
-          ...author,
-          username: author.username //emmm 之所以这里脱裤子放屁式的这么操作，是因为ts太蠢了，它识别不了我们上已经在author.username为空的时候抛出了异常，走到这里来的一定是不为空的，但是ts还是会报错，所以我们只能这么做了
-        }
-      }
-    })
+    return addUserDataToPosts(posts);
   }),
+
+  getPostsByUserId: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      })
+    )
+    .query(({ ctx, input }) =>
+      ctx.prisma.post
+        .findMany({
+          where: {
+            authorId: input.userId,
+          },
+          take: 100,
+          orderBy: [{ createdAt: "desc" }],
+        })
+        .then(addUserDataToPosts)
+    ),
+
 
   create: privateProcedure
     .input(
@@ -60,3 +65,43 @@ const ratelimit = new Ratelimit({
   limiter: Ratelimit.slidingWindow(3, "1 m"),
   analytics: true,
 });
+
+// 我们数据库里的存放的post信息只包含用户的id，不包含用户的username等信息，所以我们需要在这里通过clerkClient查询把用户的username也加上
+const addUserDataToPosts = async (posts: Post[]) => {
+  const userId = posts.map((post) => post.authorId);
+  const users = (
+    await clerkClient.users.getUserList({
+      userId: userId,
+      limit: 110,
+    })
+  ).map(filterUserForClient);
+
+  return posts.map((post) => {
+    const author = users.find((user) => user.id === post.authorId);
+
+    if (!author) {
+      console.error("AUTHOR NOT FOUND", post);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Author for post not found. POST ID: ${post.id}, USER ID: ${post.authorId}`,
+      });
+    }
+    /*if (!author.username) {
+      // user the ExternalUsername
+      if (!author.externalUsername) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Author has no GitHub Account: ${author.id}`,
+        });
+      }
+      author.username = author.externalUsername;
+    }*/
+    return {
+      post,
+      author: {
+        ...author,
+        username: author.username ?? "(username not found)",
+      },
+    };
+  });
+};

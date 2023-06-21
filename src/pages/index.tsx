@@ -170,7 +170,7 @@ const Feed = () => {
   if(!data) return <div>Something went wrong</div>
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col overflow-y-scroll">
       {
         data?.map((postWithAuthor) => (
           <PostView key={postWithAuthor.post.id} {...postWithAuthor} />
